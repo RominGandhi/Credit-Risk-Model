@@ -1,5 +1,4 @@
 
-
 # Credit Risk Model
 
 Predicts whether a credit card applicant will default based on their application details and credit history. Three models are trained and compared: Random Forest, Logistic Regression, and XGBoost.

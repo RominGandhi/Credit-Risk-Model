@@ -7,7 +7,7 @@ project:
 book:
   title: "Predicting Credit Card Risk with Machine Learning Classification Models"  # Change to your title of the project
   subtitle: "Logistic Regression, Random Forest and XGBoost Machine Learning Models" # Change to your sub-title of the project
-  author: "Romin Gandhi & Jenish Bharucha"
+  author: "Romin Gandhi"
   date: April 1, 2026
   reader-mode: true
   page-footer:
@@ -51,7 +51,7 @@ format:
     titlepage-header: "The Publisher"
     # Change the following to your names
     titlepage-footer: |
-      Gandhi, Romin; Bharucha, Jenish
+      Gandhi, Romin
     coverpage: "great-wave"
     coverpage-bg-image: "_extensions/nmfs-opensci/titlepage/images/TheGreatWaveoffKanagawa.jpeg"
     coverpage-title: "Project Report"
