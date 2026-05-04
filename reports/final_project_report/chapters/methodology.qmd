@@ -1,0 +1,131 @@
+# Methodology
+
+## Introduction to Python for Machine Learning
+
+Python was the programming language that was used for this project because of all the machine learning libraries that exist for building and evaluating models. The following libraries were used and can be found in the requirements.txt as well:
+
+- **pandas** and **numpy** for loading, merging, and manipulating the datasets
+- **scikit-learn** for preprocessing, model training, hyperparameter tuning, and evaluation of the models
+- **imbalanced-learn** for SMOTE oversampling to handle class imbalance
+- **xgboost**  for the XGBoost classifier
+- **joblib** for saving and loading trained models
+- **matplotlib** and **seaborn** for all Visualizations  
+
+
+## Platform and Machine Configurations Used
+
+The project was created and tested on local machine running Windows 11 and MAC OS using Python 3.13 as the programming language. There was no cloud services used in this project except for Github for collaboration. The three machine learning models were saved on the disk using joblib. This allowed to test the models once they were trained faster since they were already saved on disk and did not require rerunning them.
+
+## Data Split
+
+After preprocessing the data, the dataset contained 36,457 applicants which was split into 2 sets: a training set and a test set using an 80/20 split ratio. The data was split using `train_test_split` from scikit-learn with `stratify=y` and `random_state=42`. The reason to use this was to make sure both sets had the same default rate of 1.69%. The test dataset is not introduced at any stage except for evaluating and comparing model performance.
+
+| Split        | Rows   | Default Rate |
+|--------------|--------|--------------|
+| Training set | 29,165 | 1.69%        |
+| Test set     | 7,292  | 1.69%        |
+
+: Train/test split summary {#tbl-data-split}
+
+## Model Planning
+
+The first step in picking the model was to determine what type of problem this dataset presented in terms of whether it was a classification problem or regression problem. The data set presented a classification problem since the model needed to determine whether or not the applicant defaults.
+
+The three classification models that were selected to predict whether an applicant defaults or not were Logistic Regression, Random Forest, and XGBoost. Other classification models were discussed but not chosen because of constraints. For example, Support Vector Machine (SVM) would have performed poorly due to the dataset being significantly large, the training time would be significant and with class imbalance, Support Vector Machine does not have any built in mechanism. K-Nearest Neighbors (KNN) was another model that was considered, but because of the curse of dimensionality, it was ruled out. K-Nearest Neighbors relies on euclidean distance to find similar applicants so as the features increase the distance between all the points become similar and meaningless. In short, the dataset requires a tree based model that would be able to handle class imbalance and a large dataset. 
+
+
+## Model Training
+
+All three models were trained only on the training set as mentioned above. The class imbalance of 58.2 is handled differently for each model:
+
+**1. Random Forest** model uses SMOTE to address the problem of class imbalance by creating more defaulter data points during training because the data set only contains 1.69% of actual defaulters. The class_weight='balanced' parameter ensures that the model pays more attention to defaulters. 
+
+**2. Logistic Regression** uses the SMOTE as well, with class_weight tuned as a hyperparameter during cross-validation.
+
+**3. XGBoost** model handles class imbalances by using `scale_pos_weight`, which is set to the ratio of non-defaulters to defaulters of 58.2. This means that the defaulters' class is given 58.2 times the weight of the non-defaulter class in the training process.
+
+
+## Model Evaluation
+
+Each of the three models is tested on the 20% data set which is separated from the training data set. The remaining data set is used to train the models and select the hyperparameters which is done using cross-validation. The test data set is introduced at the very end to test the model on unseen data.
+
+## Model Optimization
+
+Hyperparameters for all three models were tuned using cross-validation.
+
+**Random Forest** used `RandomizedSearchCV` with 5-fold cross-validation scored on F1.
+
+| Hyperparameter      | Values searched              |
+|---------------------|------------------------------|
+| `n_estimators`      | 100, 200, 300, 500           |
+| `max_depth`         | 10, 20, 30, None             |
+| `min_samples_split` | 2, 5, 10                     |
+| `min_samples_leaf`  | 1, 2, 4                      |
+| `max_features`      | sqrt, log2                   |
+
+: Random Forest hyperparameter search space {#tbl-rf-params}
+
+**Logistic Regression** used `GridSearchCV` with 5-fold cross-validation scored on accuracy.
+
+| Hyperparameter  | Values searched                  |
+|-----------------|----------------------------------|
+| `C`             | 0.001, 0.01, 0.1, 1, 10, 100     |
+| `penalty`       | l1, l2                           |
+| `solver`        | liblinear, saga                  |
+| `class_weight`  | balanced, None                   |
+
+: Logistic Regression hyperparameter search space {#tbl-lr-params}
+
+**XGBoost** used `RandomizedSearchCV` with 5-fold cross-validation scored on F1.
+
+| Hyperparameter      | Values searched       |
+|---------------------|-----------------------|
+| `n_estimators`      | 100, 200, 300, 500    |
+| `max_depth`         | 3, 5, 7, 10           |
+| `learning_rate`     | 0.01, 0.05, 0.1, 0.2  |
+| `subsample`         | 0.6, 0.8, 1.0         |
+| `colsample_bytree`  | 0.6, 0.8, 1.0         |
+
+: XGBoost hyperparameter search space {#tbl-xgb-params}
+
+## Final Model Building
+
+After hyperparameter tuning, the best parameters found for each model were:
+
+**Random Forest** (`RandomizedSearchCV`):
+
+| Hyperparameter      | Best Value |
+|---------------------|------------|
+| `n_estimators`      | 200        |
+| `max_depth`         | 30         |
+| `min_samples_split` | 2          |
+| `min_samples_leaf`  | 1          |
+| `max_features`      | log2       |
+
+: Random Forest best hyperparameters {#tbl-rf-best}
+
+**Logistic Regression** (`GridSearchCV`):
+
+| Hyperparameter | Best Value |
+|----------------|------------|
+| `C`            | 1          |
+| `penalty`      | l1         |
+| `solver`       | saga       |
+| `class_weight` | balanced   |
+
+: Logistic Regression best hyperparameters {#tbl-lr-best}
+
+**XGBoost** (`RandomizedSearchCV`):
+
+| Hyperparameter     | Best Value |
+|--------------------|------------|
+| `n_estimators`     | 300        |
+| `max_depth`        | 5          |
+| `learning_rate`    | 0.2        |
+| `subsample`        | 1.0        |
+| `colsample_bytree` | 0.8        |
+
+: XGBoost best hyperparameters {#tbl-xgb-best}
+
+Once the hyperparameters were chosen, each model was then retrained on the training dataset with these parameters. SMOTE oversampling was used before fitting the Random Forest and Logistic Regression model. In terms of the imbalanced data for XGBoost, `scale_pos_weight=58.2` was used. The three models were then saved to disk using joblib for evaluation on the test dataset. 
+

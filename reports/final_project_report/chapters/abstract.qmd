@@ -1,0 +1,11 @@
+# Abstract {.unnumbered}
+
+
+The purpose of this project is to help financial organizations deal with the challenges they face in evaluating credit risk by applying classification models on the potential credit card applicants who may default in paying the credit card. The issue with financial organizations is that the credit scoring model is based on linear methods and has a certain number of predefined variables. However, with the help of a machine learning model, the difference is that it would be helpful in analyzing complex data and dealing with non-linear data
+
+The dataset used for this project is from Kaggle called Credit Card Approval Prediction dataset which consists of two CSV files: application_record.csv with 438,000+ applicant records across 18 features, and credit_record.csv with monthly payment history for each applicant. The final dataset after preprocessing included 36,457 applicants with a default rate of just 1.69% after merging and creating a classification default target variable, which means that the dataset has a class imbalance. 
+
+The models were trained on train/test split ratio of 80 and 20 respectively and class imbalance was handled using SMOTE oversampling for Logistic Regression and balanced class weighting for Random Forest. For XGBoost, the class imbalance problem was handled using `scale_pos_weight`. All hyperparameters for the models were chosen using `GridSearchCV` and `RandomizedSearchCV` with 5-fold cross-validation.
+
+While all three models were able to achieve the accuracy of 80%, they were very different in terms of precision-recall tradeoff. The accuracy of the Random Forest model was the highest at 98.48%, with precision at 67.65%. However, the recall of the model was very low at just 18.70%, indicating that the model was missing most of the defaulters. On the other hand, the Logistic Regression model achieved the highest recall at 71.54%, but the precision was very low at just 6.04%. This indicates that the Logistic Regression model had a lot of false positives. The XGBoost model had the best performance with the highest ROC AUC at 88.88% and an F1-score at 47.15%. Therefore, the XGBoost model was the best for predicting credit defaulters.
+

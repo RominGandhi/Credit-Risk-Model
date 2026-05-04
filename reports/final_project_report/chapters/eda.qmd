@@ -1,0 +1,179 @@
+# Pre-Processing and Exploratory Data Analysis
+
+
+## Dataset Collection
+
+### Dataset Description
+
+The data used in this project is sourced from the Credit Card Approval Prediction dataset on Kaggle [@kaggle_credit]. This dataset consists of two CSV files:
+
+**application_record.csv** contains 438,557 records across 18 attributes describing the demographic and repayment behaviour of each of the applicants:
+
+| Attribute | Description |
+|----|----|
+| `ID` | Unique applicant identifier |
+| `CODE_GENDER` | Gender (M/F) |
+| `FLAG_OWN_CAR` | Car ownership (Y/N) |
+| `FLAG_OWN_REALTY` | Property ownership (Y/N) |
+| `CNT_CHILDREN` | Number of children |
+| `AMT_INCOME_TOTAL` | Annual income |
+| `NAME_INCOME_TYPE` | Income category (e.g., Working, Pensioner) |
+| `NAME_EDUCATION_TYPE` | Education level |
+| `NAME_FAMILY_STATUS` | Marital status |
+| `NAME_HOUSING_TYPE` | Housing situation |
+| `DAYS_BIRTH` | Age in days (negative, relative to application date) |
+| `DAYS_EMPLOYED` | Employment duration in days (negative) |
+| `FLAG_MOBIL` | Mobile phone ownership |
+| `FLAG_WORK_PHONE` | Work phone availability |
+| `FLAG_PHONE` | Home phone availability |
+| `FLAG_EMAIL` | Email availability |
+| `OCCUPATION_TYPE` | Occupation category |
+| `CNT_FAM_MEMBERS` | Number of family members |
+
+: Attributes in application\_record.csv {#tbl-app-record}
+
+**credit_record.csv** contains 1,048,575 monthly payment records across 3 columns:
+
+| Column | Description |
+|---|---|
+| `ID` | Applicant identifier (links to application_record) |
+| `MONTHS_BALANCE` | Month of the record relative to the observation point (0 = current month, -1 = previous month, etc.) |
+| `STATUS` | Monthly repayment status code (see below) |
+
+: Columns in credit\_record.csv {#tbl-credit-cols}
+
+| Status Code | Meaning |
+|:-----------:|---------|
+| `0` | 1--29 days past due |
+| `1` | 30--59 days past due |
+| `2` | 60--89 days past due |
+| `3` | 90--119 days past due |
+| `4` | 120--149 days past due |
+| `5` | 150+ days past due or written off |
+| `C` | Paid off that month |
+| `X` | No loan that month |
+
+: STATUS code definitions {#tbl-status-codes}
+
+### Target Variable Definition
+
+The target variable `default` is created based on the entire credit history provided for each applicant from the dataset. If there is any particular month for which STATUS is 2, 3, 4, or 5, then the applicant is deemed as a defaulter (i.e., `default` = 1), and for all other applicants, `default` = 0.
+
+### Data Merging and Record Counts
+
+The joining of the application records with the credit records is a many-to-one relationship, as there are multiple months of credit history available for each applicant. To get a single row of data per applicant, which can then be used for classification, the monthly credit records are aggregated by calculating:
+
+- The number of times each **STATUS** value occurs per applicant (how many months were in status C, how many in status 0, etc.)
+- The total number of months on record, along with the minimum and maximum months
+
+After merging and creating the target variable, there are 36,457 unique applicants in the dataset. Of these, 35,841 (98.3%) are non-defaulters, and 616 (1.7%) are defaulters, indicating a significant class imbalance problem to be addressed in model training.
+
+## Data Pre-processing
+
+### Missing Values
+
+After merging the two raw CSV files, the dataset had two types of missing values: 
+
+**1. `OCCUPATION_TYPE` Column: 11,323 missing values (31.1%)**
+
+This was the only column that had missing values. Since over one-third of applicants did not input their occupation, filling the blank rows of OCCUPATION_TYPE column with an "Unknown" label made the most sense because labelling it with any real occupation would be misleading. This way the "Unknown" label becomes its own category and it was encoded as 17 as a numerical category. 
+
+**2. `DAYS_EMPLOYED` Column: 6,135 placeholder values (16.8%)**
+
+This column presents 2 issues. First it uses a placeholder value of 365,243 for applicants who are unemployed or retired. This means that if left as is, it would represent 1,000 years of employment which would skew the model badly. Instead all placeholder value of 365,243 were replaced with an value of 0 to represent applicants being unemployed or retired. Second, this column then was converted into `years_employed` by taking the absolute value and dividing by 365 days because the column has negative values. The original `DAYS_EMPLOYED` column was then dropped. 
+
+### Outliers
+
+Outliers in the numerical columns were handled by being capped rather than removed to keep all the rows in the dataset. Column `AMT_INCOME_TOTAL` was a column with outliers because the income of applicants ranged from \$27,000 to \$1,575,000 with a mean of \$186,686 and a standard deviation of \$101,789, which created a right skewed distribution. The values in this column were capped at \$380,250 from the maximum value of \$1,575,000 using IQR-based winsorization. 
+
+### Scaling
+
+All of the numerical columns were scaled using `StandardScaler` which means that each column was rescaled to have a mean of zero and a variance of 1. This was necessary for all 3 models since they all read from the same preprocessed `train.csv` and `test.csv`. However it is the most important for the Logistic Regression model because it is sensitive to feature magnitude. 
+
+### Feature Engineering and Transformation
+
+New features were created from the raw data. This includes: 
+
+1. **`age_years`** was created from `DAYS_BIRTH` by taking the absolute value since it used negative day count and dividing by 365. `DAYS_BIRTH` column was then dropped.
+2. **`years_employed`** was created from `DAYS_EMPLOYED` after replacing the 365,243 placeholder with 0. `DAYS_EMPLOYED` column was then dropped.
+3. **`income_per_member`** was created by taking the `AMT_INCOME_TOTAL / CNT_FAM_MEMBERS`. The reason was to capture the financial burden per household member.
+4. **`income_per_child`** was created by taking the `AMT_INCOME_TOTAL / CNT_CHILDREN` for applicants who had children. It was set to 0 otherwise, to help capture the financial burden from dependents.
+
+All categorical columns were then label-encoded. This includes: `CODE_GENDER`, `FLAG_OWN_CAR`, `FLAG_OWN_REALTY`, `NAME_INCOME_TYPE`, `NAME_EDUCATION_TYPE`, `NAME_FAMILY_STATUS`, `NAME_HOUSING_TYPE`, and `OCCUPATION_TYPE` columns.
+
+The data went through 2 more filtering steps which were: 
+
+1. **Low-variance removal** (threshold < 0.01): those columns that were nearly identical across all applicants were dropped since they provided no useful information. 
+2. **High-correlation removal** (threshold > 0.9): where if two columns were highly correlated then one was removed to avoid redundancy. 
+
+## Exploratory Data Analysis and Visualizations
+
+### Data Visualization
+
+**Target Variable Distribution**
+
+A bar chart was plotted for the target variable "default", which is highly imbalanced. Out of 36,457 applicants, there were 35,841 (98.31%) non defaulters, and only 616 (1.69%) were defaulters. The imbalance ratio was 58.2. What this means is that a model will predict "No Default" for every applicant with an 98.31% accuracy. This means that accuracy is not a good way to measure in this problem. This is an major reason to use SMOTE and class weighting in all three models.
+
+![Target Variable Distribution](../figures/target_distribution.png){#fig-target-dist fig-pos="H" width="50%"}
+
+**Histograms of Numerical Features**
+
+Histograms were created for all the numerical columns. Most columns had right-skewed distributions. For `AMT_INCOME_TOTAL`, the distribution was skewed to the right because there was a small number of high-income applicants. The histogram for `DAYS_EMPLOYED` column had a spike at 365,243, which is due to it being a placeholder.
+
+
+![Histograms of Numerical Features](../figures/numerical_histograms.png){#fig-num-hist fig-pos="H" width="100%"}
+
+\newpage
+
+**Categorical Feature Bar Charts**
+
+Bar charts were created for all 8 categorical features. The dominant groups were female applicants at 67%, no car ownership at 62%, property ownership at 67%, working income type at 52%, secondary education at 68%, married at 69%, house/apartment housing at 89% and for those applicants that provided their occupation laborers were the highest at 25.7%. 
+
+![Categorical Feature Distributions](../figures/categorical_bar_charts.png){#fig-cat-bars fig-pos="H" width="90%"}
+
+**Box Plots by Default Status**
+
+Box plots were used to compare the distribution of each numerical feature for defaulters and non-defaulters. Most features had similar medians and distributions for both groups. The only feature that had different medians for the two groups was `months_count`, in which the median for defaulters was 35 months compared to 18 months for non-defaulters. This makes sense because defaulters had longer credit history. However, none of the features could be used to separate the two classes cleanly, which confirms that the model will need to use a set of features instead of just a single feature. 
+
+![Feature Distributions by Default Status](../figures/boxplots_by_default.png){#fig-boxplots fig-pos="H" width="90%"}
+
+### Statistical Analysis
+
+Statistical analysis was performed on the data to identify any patterns, trends, and relationships. What was found during the statistical analysis was that:
+
+1. `AMT_INCOME_TOTAL` ranged from \$27,000 to \$1,575,000 with a mean of \$186,686 and a standard deviation of \$101,789.
+2. `months_count` ranged from 1 to 61 months, indicating that applicants had very different lengths of credit history.
+3. The credit status features from `status_0` to `status_X` indicated that most people in this dataset had little to no history of missed payments, which aligns with the 1.69% default rate.
+
+A correlation heatmap was created on the demographic and financial numerical features with the `default` target variable, as shown in @fig-heatmap. The highest correlation is with `months_count` at 0.106, while all other features were below 0.07, indicating they have a weak linear relationship with `default`.
+
+For features, `CNT_CHILDREN` and `CNT_FAM_MEMBERS` are found to have the highest correlation at 0.889, which is below the high correlation value of 0.9, so neither of these features are removed.
+
+![Correlation Heatmap of Demographic and Financial Features](../figures/correlation_heatmap.png){#fig-heatmap fig-pos="H" width="50%"}
+
+### Feature Selection
+
+Features that will be used in the model were selected through 2 ways: 
+
+**Absolute Correlation with Target**
+
+Features were selected based on the correlation between the feature and the target variable default, and taking the absolute value of that correlation. The most important features were all credit history based, such as `months_count` which had a correlation of 0.106, `months_min` which had a correlation of 0.060, and `months_max`which had a correlation of 0.052. The income level of the applicant, number of children, and age were all below 0.002. This indicates that these variables are not as important on their own but are much more important when combined together.
+
+**Mutual Information**
+
+The second approach was used to score features based on how well they predict default. The top features were once again related to credit history such as monthly payment status count and credit history length. The demographic features were significantly lower in both, Random Forest and XGBoost model, which means that the payment history is by far the best predictor of the target variable default. The feature importance plots show this, in which `months_count`, `status_0`, and `status_C` were ranked as the top features in both models.
+
+::: {#fig-feature-importances layout-ncol=2 fig-pos="H"}
+
+![Random Forest Top 20 Feature ](../figures/rf_feature_importance.png){#fig-rf-importance}
+
+![XGBoost Top 20 Feature ](../figures/xgb_feature_importance.png){#fig-xgb-importance}
+
+Top 20 Feature Importances
+:::
+
+### Dimensionality Reduction
+
+No dimensionality reduction techniques were used in this project. The dataset was already reduced to 28 features after filtering, dimensionality of the data did not become a problem in any of the three models. Just removing features that were low variance and high correlation were enough to clean up the features.
+
+

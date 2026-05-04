@@ -1,0 +1,29 @@
+# Conclusion
+
+## Summary of Findings
+
+This project has designed and compared three different machine learning classifier algorithms in predicting credit card defaulters: Logistic Regression, Random Forest, and XGBoost. These classifier algorithms were tested on 36,457 applicant records obtained from the Kaggle dataset on credit card approval prediction, based on a binary target variable on whether an applicant has ever been 60 or more days past due on credit obligations.
+
+All three classification models were able to achieve an accuracy level above 80% on the test dataset. However, there were significant differences in their performance:
+
+- **Random Forest** achieved the best test accuracy of around 98.5%, with high precision and moderate recall on the credit card defaulters class. It used SMOTE oversampling along with balanced class weight and used randomized search on tree depth, number of estimators, and split criteria.
+
+- **XGBoost** resulted in comparable accuracy of around 98.3% with the best ROC AUC across all the models. Hence, it resulted in the best model to predict defaulters and non-defaulters. The use of scale_pos_weight in handling unbalanced data, along with the capacity of gradient boosting to focus more on misclassified data, gave a more balanced precision-recall trade-off than the Random Forest model.
+
+- **Logistic Regression** resulted in an accuracy of around 80.8%, which is the best for the default class in terms of recall but significantly poor for precision. This is because of the trade-off between a linear model and high rebalancing of the classes. The model is good at predicting actual defaulters but also predicts a large number of non-defaulters as defaulters.
+
+Based on the ROC AUC metric, XGBoost was identified as the best performing model for this particular problem of predicting credit defaulters. This is because of the model's ability to balance out the minority class of defaulters with a good classification accuracy, making it the best model for use in a credit risk assessment scenario.
+
+## Future Work
+
+In the future, the results can be improved with better approaches. These include: 
+
+1.  **Deep learning approaches:**  Sequential monthly credit data could be used to train Recurrent Neural Networks (RNN) or transformer models, which can capture the payment patterns lost during aggregation of the data. 
+
+2.  **Advanced imbalance techniques:** To handle imbalance data more effectively, other methods such as ADASYN, Borderline-SMOTE, or cost-sensitive learning could improve recall but at the cost of precision.
+
+3.  **Model ensembling:** The predictions made by Logistic Regression, Random Forest, and XGBoost models can be combined to make one single model, which can be more accurate in its predictions.
+
+4.  **External data:** More data can be used to improve model accuracy, such as transactional spending data and economic indicators.
+
+5.  **Fairness and bias auditing:** The predictions of the models can be tested across different groups of applicants to ensure there is no bias in the predictions, which can be an important point to consider during decision-making. 

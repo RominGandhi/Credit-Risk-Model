@@ -1,0 +1,26 @@
+# Introduction
+
+## Overview
+
+In the present financial service scenario, the process of credit risk assessment is an important part of the overall process. In this project, three different classifiers, namely, Logistic Regression, Random Forest, and XGBoost, are used to predict the default of the credit card based on the data set provided by the Kaggle Credit Card Approval Prediction Data Set, a binary classification problem.
+
+### Existing System
+In the traditional approach to credit risk assessment, the rule-based method and the logistic regression method are used. The problem with these methods is that biased decision-making is involved, and also these methods are not capable of handling non-linear data. Moreover, these methods are also not scalable.The problem is also that the credit default data is imbalanced, where one class is highly represented, and the other class is less represented, i.e., 1.7%. Naive classifiers have high accuracy because one class is highly represented, and the defaulters are ignored.
+
+## Objectives
+
+The objectives of this project are as follows:
+
+1.  **Data preparation**: This objective involves merging 2 raw CSV files into 1 CSV file which combines the applicant demographic data with their monthly credit payment records, and aggregate each applicant's payment history into a single row. This will be the processed CSV.
+
+2.  **Preprocessing and feature engineering**: This objective is created so that all missing values are handled before models are trained, outliers are capped using the interquartile range method, categorical features are encoded as numerical features and new features are created such as age in years, employment duration, and income per family member from existing features.
+
+3.  **Model development**:  The machine learning models will be classification models of increasing complexity starting with logistic regression as a linear baseline, and random forest and XGBoost as more powerful tree based alternatives for this type of large dataset.
+
+4.  **Class imbalance handling**: The data set contains a class imbalance problem, and it will be solved using SMOTE oversampling, balanced class weighing, and scaling of the positive class weight to equally represent the minority class during the training of the model.
+
+5.  **Hyperparameter optimization**: Each of the three classification models will have hyperparameters selected through grid search and five fold cross validation to find the best performing parameter combination.
+
+6.  **Evaluation and comparison**: All three models will be tested on a test dataset which will not be used during the training of the models. Performance of each model will be compared based on 5 metrics which include accuracy, precision, recall, F1-Score, and ROC AUC.
+
+

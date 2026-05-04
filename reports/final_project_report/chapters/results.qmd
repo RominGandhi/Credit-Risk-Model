@@ -1,0 +1,97 @@
+# Results
+
+## Description of the Models
+
+This problem of credit risk assessment requires classification models. The three classification models that were used are: 
+
+**1. Logistic Regression**:  is used as it is one of the simplest model to compare with. It looks at an applicant's features and estimates the likelihood of applicants defaulting. However, it assumes a linear relationship between the features and target variable.
+
+**2. Random Forest**: is an ensemble of decision trees where each of the tree is trained on a random subset of the data and features. The prediction from the tree is made by majority vote. This model tends to have better performance than logistic regression because it's able to capture complex patterns. 
+
+**3. XGBoost**: is a type of gradient boosting algorithm where each tree is built by correcting the mistakes of the previous tree. This model is a strong performer on structured data compared to Random Forest as it fixes the mistake that the previous tree made. 
+
+
+## Performance Metrics
+
+Each model was evaluated using five metrics: 
+
+- **Accuracy**: is the percentage (%) of total correct predictions
+- **Precision**: means out of all applicants the model flagged as defaulters, how many actually were defaulters
+- **Recall**: means out of all actual defaulters, how many did the model actually catch 
+- **F1-Score**: is a score that balances both precision and recall 
+- **ROC AUC**: measures the model's ability to separate defaulters from non-defaulters 
+
+However, since the data is heavily imbalanced, the best evaluation metric for this model is the ROC AUC Score given that a model which can accurately predict "No Default" every time would have an accuracy of 98.31%.
+
+
+## Results Table
+
+The table below summarizes the performance of all three models on a test set of 7,292 applicants. 
+
+| Model               | Accuracy | Precision | Recall | F1-Score | ROC AUC |
+|---------------------|----------|-----------|--------|----------|---------|
+| Logistic Regression | 0.8075   | 0.0604    | 0.7154 | 0.1114   | 0.8058  |
+| Random Forest       | 0.9848   | 0.6765    | 0.1870 | 0.2930   | 0.8830  |
+| **XGBoost**         | **0.9822** | **0.4715** | **0.4715** | **0.4715** | **0.8888** |
+
+: Model performance on the test set (n = 7,292) {#tbl-model-results}
+
+The XGBoost model was able to achieve the highest ROC AUC of 0.8888 and is the best model.
+
+## Interpretation of the Results
+
+Logistic Regression had the worst ROC AUC at 80.58% and a low precision of 6.04%. The model was able to predict 71.54% of actual defaulters but it also had a false positive rate of 1,369 out of 7,292. This means that the models underlying assumption of the relationship between features and target variable was wrong, it is not linear.
+
+The Random Forest Model had the highest accuracy and precision at 98.48% and 67.65% respectively which means that when the model did predict an applicant as a defaulter it was correct ⅔ of the times. However the downside to this model is that the recall is 18.70% which means it only caught 18.70% of the actual defaulters. Overall, the model was able to correctly classify 7,158 non-defaulters but only predicted 23 defaulters correctly and missed 100 defaulters.
+
+The recall of the XGBoost model is 47.15%, which means that the model correctly classified 58 of the 123 defaulters at a false positive rate of 65. This means that it is a much better precision-recall tradeoff compared to the other two models. Also, the recall of the Random Forest model is much less compared to the current model. The F1 Score and ROC AUC for the current model is 47.15% and 88.88% respectively, which is the highest among the three models. 
+
+\newpage
+
+## Visualization
+
+
+The ROC curves show that all three models perform better than randomly guessing, but it's clear that XGBoost and Random Forest clearly outperform Logistic Regression due to the assumption of a linear relationship. The bar chart of the metrics across the 3 models makes it clear that Logistic Regression model has high recall but an low precision, Random Forest has high precision but an low recall, and XGBoost sits in between with the best balance.
+
+::: {#fig-results-vis layout-ncol=2 fig-pos="H"}
+
+![Model Comparison — All Metrics](../figures/model_comparison_bar.png){#fig-results-comparison width=100%}
+
+![ROC Curve Comparison](../figures/roc_comparison.png){#fig-results-roc width=100%}
+
+Model Performance Visualizations
+:::
+
+\newpage
+
+::: {#fig-all-models layout="[[1,1],[1,1],[1,1]]" fig-pos="H"}
+
+![Random Forest Confusion Matrix](../figures/rf_confusion_matrix.png){#fig-rf-cm}
+
+![Random Forest ROC Curve](../figures/rf_roc_curve.png){#fig-rf-roc}
+
+![Logistic Regression Confusion Matrix](../figures/lr_confusion_matrix.png){#fig-lr-cm}
+
+![Logistic Regression ROC Curve](../figures/lr_roc_curve.png){#fig-lr-roc}
+
+![XGBoost Confusion Matrix](../figures/xgb_confusion_matrix.png){#fig-xgb-cm}
+
+![XGBoost ROC Curve](../figures/xgb_roc_curve.png){#fig-xgb-roc}
+
+Individual Model Results — Confusion Matrices and ROC Curves
+:::
+
+## Sensitivity Analysis
+
+5-fold cross-validation was run on the training set for each model during hyperparameter tuning. Below are the results of the 5-fold cross-validation:
+
+| Model               | CV Accuracy          | CV ROC AUC           |
+|---------------------|----------------------|----------------------|
+| Logistic Regression | 0.8053 (+/- 0.0069)  | 0.8191 (+/- 0.0128)  |
+| Random Forest       | 0.9857 (+/- 0.0011)  | 0.8857 (+/- 0.0102)  |
+| XGBoost             | 0.9837 (+/- 0.0015)  | 0.9114 (+/- 0.0064)  |
+
+: 5-fold cross-validation results on the training set {#tbl-cv-results}
+
+All three of the models showed low variance across folds, which means that the models are stable. Random Forest and XGBoost both had very small standard deviations of +/- 0.001, which means that their results are consistent and not highly dependent on what rows were included in each fold.
+

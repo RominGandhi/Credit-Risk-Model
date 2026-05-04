@@ -1,0 +1,5 @@
+# Preface {.unnumbered}
+
+This report was completed for the final project in CP 322: Machine Learning at Wilfrid Laurier University by Romin Gandhi and Jenish Bharucha.
+
+The reason why credit risk was chosen as a topic is that, being two students with a background in both computer science and finance, we wanted to work on a problem that involves both fields, and credit risk is an important issue in financial services organizations. According to data, credit card charge-offs in Q3 2024 have risen to 4.65%, the highest level since 2011 [@ncba2024chargeoffs]. It shows that there should be a better way to predict whether or not an applicant will default on their credit card balance. With this project, we hope to show our understanding of various machine learning models that will help predict whether or not an applicant will default on their credit card balance, along with the trade-offs between each of the three models used to solve the problem.
